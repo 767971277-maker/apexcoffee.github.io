@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX A1 · 机型详情</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fafaf8;
+            color: #1e1e1e;
+            line-height: 1.6;
+        }
+        .container { max-width:1280px; margin:0 auto; padding:0 32px; }
+
+        /* ===== 顶部导航 ===== */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 0; border-bottom: 1px solid #eee; flex-wrap: wrap; gap:12px;
+        }
+        .logo-area { display:flex; align-items:center; gap:10px; }
+        .logo-area img { height:44px; width:auto; }
+        .logo-area span { font-weight:600; font-size:1.5rem; letter-spacing:-0.02em; }
+        .nav-right { display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+
+        .main-nav { display:flex; gap:28px; font-weight:500; }
+        .main-nav a { text-decoration:none; color:#1e1e1e; font-size:0.95rem; transition:color 0.2s; }
+        .main-nav a:hover, .main-nav a.active { color:#b8860b; }
+
+        .lang-switcher { position:relative; display:inline-block; }
+        .lang-btn {
+            background:#f0ede8; border:none; padding:8px 16px; border-radius:30px;
+            font-size:0.85rem; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:6px;
+        }
+        .lang-btn:hover { background:#e3ded6; }
+        .lang-dropdown {
+            display:none; position:absolute; right:0; top:110%; background:#fff;
+            border:1px solid #eee; border-radius:16px; padding:8px 0; min-width:170px;
+            box-shadow:0 12px 30px rgba(0,0,0,0.08); z-index:100;
+        }
+        .lang-dropdown a {
+            display:block; padding:8px 20px; font-size:0.9rem; color:#1e1e1e;
+            text-decoration:none; cursor:pointer; transition:background 0.15s;
+        }
+        .lang-dropdown a:hover { background:#f5f3ef; }
+        .lang-switcher:hover .lang-dropdown { display:block; }
+
+        /* 动态「获取报价」按钮 */
+        .quote-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #b8860b;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            animation: pulse-glow 2s infinite;
+            border: 2px solid #b8860b;
+            white-space: nowrap;
+        }
+        .quote-btn:hover {
+            background: #a0740a;
+            transform: scale(1.04);
+            border-color: #a0740a;
+        }
+        .quote-btn i { font-size: 1rem; }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(184, 134, 11, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(184, 134, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(184, 134, 11, 0); }
+        }
+
+        .hamburger { display:none; font-size:1.6rem; background:none; border:none; cursor:pointer; }
+
+        @media (max-width:880px) {
+            .hamburger { display:block; }
+            .main-nav { display:none; width:100%; flex-direction:column; gap:12px; padding:16px 0 8px; border-top:1px solid #eee; }
+            .main-nav.open { display:flex; }
+            .nav-right { width:100%; justify-content:space-between; }
+            .container { padding:0 20px; }
+            .quote-btn { padding:8px 16px; font-size:0.8rem; }
+        }
+        @media (max-width:480px) {
+            .quote-btn span { display:none; }
+            .quote-btn { padding:8px 14px; }
+        }
+
+        /* ===== 返回链接 ===== */
+        .back-link {
+            display:inline-block; margin: 28px 0 18px;
+            color:#b8860b; text-decoration:none; font-weight:500;
+        }
+        .back-link i { margin-right:6px; }
+        .back-link:hover { text-decoration:underline; }
+
+        /* ===== 机型标题 ===== */
+        .machine-header { margin-bottom: 28px; }
+        .machine-header h1 { font-size:2.8rem; font-weight:600; letter-spacing:-0.02em; }
+        .machine-header h1 i { color:#b8860b; font-style:normal; }
+        .machine-header .sub { color:#666; font-size:1.1rem; margin-top:4px; }
+
+        /* ===== 图片画廊 ===== */
+        .gallery {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        .gallery .main-img {
+            grid-row: span 2;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #e8e3db;
+        }
+        .gallery .main-img img {
+            width:100%; height:100%; object-fit:cover; aspect-ratio:3/4; display:block;
+        }
+        .gallery .thumb {
+            border-radius: 16px; overflow:hidden; background:#e8e3db;
+        }
+        .gallery .thumb img {
+            width:100%; height:100%; object-fit:cover; aspect-ratio:1/1; display:block;
+        }
+        @media (max-width:700px) {
+            .gallery { grid-template-columns:1fr 1fr; gap:12px; }
+            .gallery .main-img { grid-row:span 1; grid-column:span 2; }
+            .gallery .main-img img { aspect-ratio:4/3; }
+        }
+
+        /* ===== 核心参数 ===== */
+        .specs {
+            display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+            gap:20px; background:#fff; border-radius:24px; padding:28px 24px;
+            border:1px solid #f0ece6; margin-bottom:36px;
+        }
+        .specs .item { text-align:center; }
+        .specs .item .number { font-size:2.2rem; font-weight:700; color:#b8860b; display:block; }
+        .specs .item .label { font-size:0.9rem; color:#666; }
+
+        /* ===== 详细参数表 ===== */
+        .spec-table {
+            background:#fff; border-radius:24px; padding:32px 28px;
+            border:1px solid #f0ece6; margin-bottom:36px;
+        }
+        .spec-table h2 { font-size:1.4rem; font-weight:600; margin-bottom:14px; }
+        .spec-table table { width:100%; border-collapse:collapse; }
+        .spec-table td {
+            padding:10px 8px; border-bottom:1px solid #f5f2ed; font-size:0.95rem;
+        }
+        .spec-table td:first-child { font-weight:500; color:#666; width:40%; }
+        .spec-table tr:last-child td { border-bottom:none; }
+
+        /* ===== 特点列表 ===== */
+        .features {
+            background:#fff; border-radius:24px; padding:36px 32px;
+            border:1px solid #f0ece6; margin-bottom:36px;
+        }
+        .features h2 { font-size:1.6rem; font-weight:600; margin-bottom:18px; }
+        .features ul {
+            list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:12px 24px;
+        }
+        .features ul li {
+            padding:8px 0; border-bottom:1px solid #f5f2ed;
+            display:flex; align-items:center; gap:10px;
+        }
+        .features ul li i { color:#b8860b; width:20px; }
+        @media (max-width:600px) {
+            .features ul { grid-template-columns:1fr; }
+            .features { padding:24px 18px; }
+        }
+
+        /* ===== 应用场景 ===== */
+        .scenarios {
+            background:#fff; border-radius:24px; padding:36px 32px;
+            border:1px solid #f0ece6; margin-bottom:36px;
+        }
+        .scenarios h2 { font-size:1.6rem; font-weight:600; margin-bottom:18px; }
+        .scenario-grid {
+            display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+        }
+        .scenario-item {
+            background:#faf8f5; border-radius:16px; padding:24px 20px; text-align:center;
+        }
+        .scenario-item .icon { font-size:2.4rem; color:#b8860b; margin-bottom:8px; }
+        .scenario-item h4 { font-weight:600; margin-bottom:4px; }
+        .scenario-item p { font-size:0.9rem; color:#666; }
+        @media (max-width:700px) {
+            .scenario-grid { grid-template-columns:1fr 1fr; gap:16px; }
+        }
+        @media (max-width:480px) {
+            .scenario-grid { grid-template-columns:1fr; }
+        }
+
+        /* ===== 视频演示 ===== */
+        .video-demo {
+            background:#fff; border-radius:24px; padding:32px 28px;
+            border:1px solid #f0ece6; margin-bottom:36px;
+        }
+        .video-demo h2 { font-size:1.6rem; font-weight:600; margin-bottom:6px; }
+        .video-demo .sub { color:#666; margin-bottom:18px; }
+        .video-demo video {
+            width:100%; max-width:800px; border-radius:16px;
+            background:#d9d4cc; display:block; margin:0 auto;
+        }
+
+        .footer {
+            border-top:1px solid #ece8e2; padding:28px 0 24px;
+            text-align:center; color:#6b6b6b; font-size:0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ===== 顶部导航 ===== -->
+    <header class="top-bar">
+        <div class="logo-area">
+            <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEV52hqOf1Xgsx9PBPSamC9Nntrzedq9gACCCAAAvQD0VWh17jzi0tHhzwE.png" alt="APEX Logo">
+            <span>APEX</span>
+        </div>
+        <div class="nav-right">
+            <nav class="main-nav" id="mainNav">
+                <a href="index.html" data-i18n="nav-home">首页</a>
+                <a href="machine.html" class="active" data-i18n="nav-machine">AI机型</a>
+                <!-- 修复：跳转到首页的#contact -->
+                <a href="index.html#contact" data-i18n="nav-contact">联系我们</a>
+            </nav>
+
+            <!-- 动态「获取报价」按钮 -->
+            <a href="https://wa.me/8615375355915" target="_blank" class="quote-btn" data-i18n="quote-btn">
+                <i class="fab fa-whatsapp"></i> <span>获取报价</span>
+            </a>
+
+            <div class="lang-switcher">
+                <button class="lang-btn" id="langBtn"><i class="fas fa-globe"></i> <span id="currentLangLabel">语言</span> <i class="fas fa-chevron-down" style="font-size:0.6rem;margin-left:4px;"></i></button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <a data-lang="zh">简体中文</a>
+                    <a data-lang="en">English</a>
+                    <a data-lang="id">Bahasa Indonesia</a>
+                    <a data-lang="vi">Tiếng Việt</a>
+                    <a data-lang="th">ภาษาไทย</a>
+                    <a data-lang="ar">العربية</a>
+                    <a data-lang="tr">Türkçe</a>
+                    <a data-lang="fa">فارسی</a>
+                </div>
+            </div>
+            <button class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+        </div>
+    </header>
+
+    <!-- ===== 返回链接 ===== -->
+    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> <span data-i18n="back">返回首页</span></a>
+
+    <!-- ===== 机型标题 ===== -->
+    <div class="machine-header">
+        <h1 data-i18n="machine-title">APEX <i>A1</i> · 智能色选机</h1>
+        <div class="sub" data-i18n="machine-sub">一站式咖啡豆色选 · AI视觉 + 精密光学</div>
+    </div>
+
+    <!-- ===== 图片画廊 ===== -->
+    <div class="gallery">
+        <div class="main-img">
+            <img src="https://cdn.sanity.io/images/pmoyamgu/production/0e7a23e23398f43cebb034fd0c6222e7bded0247-803x1268.png" alt="APEX A1 主图">
+        </div>
+        <div class="thumb"><img src="https://cdn.sanity.io/images/pmoyamgu/production/337afe0cf11c055521304e70024b1aa531bab12d-676x1013.jpg" alt="APEX A1 细节1"></div>
+        <div class="thumb"><img src="https://cdn.sanity.io/images/pmoyamgu/production/10c55d8d1769b1d0a122528b45d4e884d698970b-820x1229.jpg" alt="APEX A1 细节2"></div>
+        <div class="thumb"><img src="https://cdn.sanity.io/images/pmoyamgu/production/e85ddeba713c7d6c910e2a5dfd927f85d0e4b867-820x1229.jpg" alt="APEX A1 细节3"></div>
+        <div class="thumb"><img src="https://cdn.sanity.io/images/pmoyamgu/production/0e7a23e23398f43cebb034fd0c6222e7bded0247-803x1268.png" alt="APEX A1 细节4"></div>
+    </div>
+
+    <!-- ===== 核心参数 ===== -->
+    <div class="specs">
+        <div class="item"><span class="number">500kg/h</span><span class="label" data-i18n="spec-throughput">处理产能</span></div>
+        <div class="item"><span class="number">0.1mm</span><span class="label" data-i18n="spec-precision">光学精度</span></div>
+        <div class="item"><span class="number">32</span><span class="label" data-i18n="spec-ejector">气动 ejector</span></div>
+        <div class="item"><span class="number">23,000</span><span class="label" data-i18n="spec-training">训练图像 / 自定义档案</span></div>
+    </div>
+
+    <!-- ===== 详细参数表 ===== -->
+    <div class="spec-table">
+        <h2 data-i18n="spec-table-title">技术规格</h2>
+        <table>
+            <tr><td data-i18n="st1">设备型号</td><td>APEX A1</td></tr>
+            <tr><td data-i18n="st2">处理产能</td><td>500 kg/h</td></tr>
+            <tr><td data-i18n="st3">光学分辨率</td><td>0.1 mm</td></tr>
+            <tr><td data-i18n="st4">气动 ejector 数量</td><td>32 个</td></tr>
+            <tr><td data-i18n="st5">AI 训练图像</td><td>23,000 张 / 自定义档案</td></tr>
+            <tr><td data-i18n="st6">分选模式</td><td>颜色分选 + 瑕疵剔除 + 粒径分级</td></tr>
+            <tr><td data-i18n="st7">设备尺寸 (L×W×H)</td><td>1,800 × 1,200 × 1,600 mm</td></tr>
+            <tr><td data-i18n="st8">电源要求</td><td>220V / 50Hz / 3.5kW</td></tr>
+        </table>
+    </div>
+
+    <!-- ===== 特点列表 ===== -->
+    <div class="features">
+        <h2 data-i18n="features-title">核心优势</h2>
+        <ul>
+            <li><i class="fas fa-check-circle"></i> <span data-i18n="f1">提升杯测分数 · 剔除奎克豆与伪奎克豆</span></li>
+            <li><i class="fas fa-check-circle"></i> <span data-i18n="f2">智能采购 · 以更低成本采购低等级生豆，分选至精品标准</span></li>
+            <li><i class="fas fa-check-circle"></i> <span data-i18n="f3">规模化无妥协 · 500kg/h 产能，突破人工分拣瓶颈</span></li>
+            <li><i class="fas fa-check-circle"></i> <span data-i18n="f4">三机合一 · 色选、瑕疵剔除、粒径分级一次性完成</span></li>
+            <li><i class="fas fa-check-circle"></i> <span data-i18n="f5">AI 学习 · 2-4天构建自定义分选档案，无需手动校准RGB</span></li>
+            <li><i class="fas fa-check-circle"></i> <span data-i18n="f6">数据可追溯 · 一键生成品质报告，全程可追踪</span></li>
+        </ul>
+    </div>
+
+    <!-- ===== 应用场景 ===== -->
+    <div class="scenarios">
+        <h2 data-i18n="scenario-title">应用场景</h2>
+        <div class="scenario-grid">
+            <div class="scenario-item">
+                <div class="icon"><i class="fas fa-store"></i></div>
+                <h4 data-i18n="sc1-title">精品烘焙商</h4>
+                <p data-i18n="sc1-desc">提升杯测分数，稳定出品品质</p>
+            </div>
+            <div class="scenario-item">
+                <div class="icon"><i class="fas fa-industry"></i></div>
+                <h4 data-i18n="sc2-title">大型加工厂</h4>
+                <p data-i18n="sc2-desc">规模化处理，降低生豆采购成本</p>
+            </div>
+            <div class="scenario-item">
+                <div class="icon"><i class="fas fa-flask"></i></div>
+                <h4 data-i18n="sc3-title">咖啡实验室</h4>
+                <p data-i18n="sc3-desc">精准分选，助力品种研究与品质定级</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 演示视频 ===== -->
+    <div class="video-demo">
+        <h2 data-i18n="video-title">技术演示</h2>
+        <div class="sub" data-i18n="video-sub">高速色选 · AI实时识别 · 一键输出标准批次</div>
+        <video controls preload="metadata" poster="https://cdn.sanity.io/images/pmoyamgu/production/0e7a23e23398f43cebb034fd0c6222e7bded0247-803x1268.png">
+            <source src="https://cdn.sanity.io/files/pmoyamgu/production/7d42c5c69647bde3cc529c0fd045553c5334cd8b.mp4" type="video/mp4">
+            您的浏览器不支持视频播放。
+        </video>
+    </div>
+
+    <footer class="footer">
+        <p data-i18n="footer">&copy; 2026 APEX · 一站式咖啡豆色选方案  |  用AI重新定义品质标准</p>
+    </footer>
+</div>
+
+<script>
+// ============================================================
+// 完整多语言数据（机型页 - 8种语言）
+// ============================================================
+const translations = {
+    zh: {
+        'nav-home': '首页', 'nav-machine': 'AI机型', 'nav-contact': '联系我们',
+        'quote-btn': '获取报价',
+        'back': '返回首页',
+        'machine-title': 'APEX A1 · 智能色选机',
+        'machine-sub': '一站式咖啡豆色选 · AI视觉 + 精密光学',
+        'spec-throughput': '处理产能',
+        'spec-precision': '光学精度',
+        'spec-ejector': '气动 ejector',
+        'spec-training': '训练图像 / 自定义档案',
+        'spec-table-title': '技术规格',
+        'st1': '设备型号', 'st2': '处理产能', 'st3': '光学分辨率',
+        'st4': '气动 ejector 数量', 'st5': 'AI 训练图像',
+        'st6': '分选模式', 'st7': '设备尺寸 (L×W×H)', 'st8': '电源要求',
+        'features-title': '核心优势',
+        'f1': '提升杯测分数 · 剔除奎克豆与伪奎克豆',
+        'f2': '智能采购 · 以更低成本采购低等级生豆，分选至精品标准',
+        'f3': '规模化无妥协 · 500kg/h 产能，突破人工分拣瓶颈',
+        'f4': '三机合一 · 色选、瑕疵剔除、粒径分级一次性完成',
+        'f5': 'AI 学习 · 2-4天构建自定义分选档案，无需手动校准RGB',
+        'f6': '数据可追溯 · 一键生成品质报告，全程可追踪',
+        'scenario-title': '应用场景',
+        'sc1-title': '精品烘焙商', 'sc1-desc': '提升杯测分数，稳定出品品质',
+        'sc2-title': '大型加工厂', 'sc2-desc': '规模化处理，降低生豆采购成本',
+        'sc3-title': '咖啡实验室', 'sc3-desc': '精准分选，助力品种研究与品质定级',
+        'video-title': '技术演示',
+        'video-sub': '高速色选 · AI实时识别 · 一键输出标准批次',
+        'footer': '© 2026 APEX · 一站式咖啡豆色选方案  |  用AI重新定义品质标准'
+    },
+    en: {
+        'nav-home': 'Home', 'nav-machine': 'AI Models', 'nav-contact': 'Contact',
+        'quote-btn': 'Get Quote',
+        'back': 'Back to Home',
+        'machine-title': 'APEX A1 · Smart Color Sorter',
+        'machine-sub': 'One-stop Coffee Bean Sorting · AI Vision + Precision Optics',
+        'spec-throughput': 'Throughput',
+        'spec-precision': 'Optical Precision',
+        'spec-ejector': 'Pneumatic Ejectors',
+        'spec-training': 'Training Images / Custom Profile',
+        'spec-table-title': 'Technical Specifications',
+        'st1': 'Model', 'st2': 'Throughput', 'st3': 'Optical Resolution',
+        'st4': 'Pneumatic Ejectors', 'st5': 'AI Training Images',
+        'st6': 'Sorting Modes', 'st7': 'Dimensions (L×W×H)', 'st8': 'Power Supply',
+        'features-title': 'Key Advantages',
+        'f1': 'Elevate Cup Scores · Remove quakers and pseudo-quakers',
+        'f2': 'Smarter Procurement · Sort lower-grade beans to specialty standards',
+        'f3': 'Scale Without Compromise · 500kg/h, break manual sorting bottleneck',
+        'f4': 'Three-in-One · Color sorting, defect removal, screen sizing in one pass',
+        'f5': 'AI Learning · Build custom sorting profile in 2-4 days, no manual RGB calibration',
+        'f6': 'Data Traceable · One-click quality reports, full traceability',
+        'scenario-title': 'Applications',
+        'sc1-title': 'Specialty Roasters', 'sc1-desc': 'Improve cupping scores, stabilize quality',
+        'sc2-title': 'Large Processing Plants', 'sc2-desc': 'Scale processing, reduce green bean costs',
+        'sc3-title': 'Coffee Labs', 'sc3-desc': 'Precise sorting, support variety research and quality grading',
+        'video-title': 'Technical Demo',
+        'video-sub': 'High-speed sorting · AI real-time recognition · One-click standard batch output',
+        'footer': '© 2026 APEX · One-stop Coffee Bean Color Sorting  |  Redefining Quality with AI'
+    },
+    id: {
+        'nav-home': 'Beranda', 'nav-machine': 'Model AI', 'nav-contact': 'Hubungi',
+        'quote-btn': 'Minta Penawaran',
+        'back': 'Kembali ke Beranda',
+        'machine-title': 'APEX A1 · Pemilah Warna Cerdas',
+        'machine-sub': 'Pemilahan Biji Kopi Satu Atap · Visi AI + Optik Presisi',
+        'spec-throughput': 'Kapasitas',
+        'spec-precision': 'Presisi Optik',
+        'spec-ejector': 'Ejector Pneumatik',
+        'spec-training': 'Gambar Pelatihan / Profil Kustom',
+        'spec-table-title': 'Spesifikasi Teknis',
+        'st1': 'Model', 'st2': 'Kapasitas', 'st3': 'Resolusi Optik',
+        'st4': 'Jumlah Ejector Pneumatik', 'st5': 'Gambar Pelatihan AI',
+        'st6': 'Mode Pemilahan', 'st7': 'Dimensi (P×L×T)', 'st8': 'Daya',
+        'features-title': 'Keunggulan Utama',
+        'f1': 'Tingkatkan Skor Cangkir · Hapus quaker dan pseudo-quaker',
+        'f2': 'Pembelian Cerdas · Sortir biji kelas rendah ke standar specialty',
+        'f3': 'Skala Tanpa Kompromi · 500kg/jam, pecahkan hambatan sortir manual',
+        'f4': 'Tiga-dalam-Satu · Sortir warna, penghapusan cacat, pengayakan ukuran satu proses',
+        'f5': 'Pembelajaran AI · Bangun profil kustom 2-4 hari, tanpa kalibrasi RGB manual',
+        'f6': 'Data Terlacak · Laporan kualitas satu klik, keterlacakan penuh',
+        'scenario-title': 'Aplikasi',
+        'sc1-title': 'Pemanggang Specialty', 'sc1-desc': 'Tingkatkan skor cupping, stabilkan kualitas',
+        'sc2-title': 'Pabrik Pengolahan Besar', 'sc2-desc': 'Pemrosesan skala, kurangi biaya biji hijau',
+        'sc3-title': 'Lab Kopi', 'sc3-desc': 'Pemilahan presisi, dukung penelitian varietas dan penilaian kualitas',
+        'video-title': 'Demo Teknis',
+        'video-sub': 'Pemilahan kecepatan tinggi · Pengenalan AI waktu nyata · Keluaran batch standar satu klik',
+        'footer': '© 2026 APEX · Solusi Pemilahan Biji Kopi Satu Atap  |  Mendefinisikan Ulang Kualitas dengan AI'
+    },
+    vi: {
+        'nav-home': 'Trang chủ', 'nav-machine': 'Mô hình AI', 'nav-contact': 'Liên hệ',
+        'quote-btn': 'Nhận Báo Giá',
+        'back': 'Quay lại trang chủ',
+        'machine-title': 'APEX A1 · Máy phân loại màu thông minh',
+        'machine-sub': 'Phân loại cà phê toàn diện · AI Vision + Quang học chính xác',
+        'spec-throughput': 'Công suất',
+        'spec-precision': 'Độ chính xác quang học',
+        'spec-ejector': 'Ejector khí nén',
+        'spec-training': 'Hình ảnh đào tạo / Hồ sơ tùy chỉnh',
+        'spec-table-title': 'Thông số kỹ thuật',
+        'st1': 'Mã số', 'st2': 'Công suất', 'st3': 'Độ phân giải quang học',
+        'st4': 'Số lượng ejector khí nén', 'st5': 'Hình ảnh đào tạo AI',
+        'st6': 'Chế độ phân loại', 'st7': 'Kích thước (D×R×C)', 'st8': 'Nguồn điện',
+        'features-title': 'Lợi thế cốt lõi',
+        'f1': 'Cải thiện điểm cốc · Loại bỏ quaker và pseudo-quaker',
+        'f2': 'Thu mua thông minh · Phân loại hạt cấp thấp lên tiêu chuẩn đặc sản',
+        'f3': 'Mở rộng không thỏa hiệp · 500kg/h, vượt qua giới hạn phân loại thủ công',
+        'f4': 'Ba-trong-một · Phân loại màu, loại bỏ khuyết điểm, phân loại kích thước một lần',
+        'f5': 'Học AI · Xây dựng hồ sơ tùy chỉnh 2-4 ngày, không cần hiệu chỉnh RGB thủ công',
+        'f6': 'Dữ liệu có thể truy xuất · Báo cáo chất lượng một chạm, truy xuất đầy đủ',
+        'scenario-title': 'Ứng dụng',
+        'sc1-title': 'Nhà rang đặc sản', 'sc1-desc': 'Cải thiện điểm thử nếm, ổn định chất lượng',
+        'sc2-title': 'Nhà máy chế biến lớn', 'sc2-desc': 'Xử lý quy mô, giảm chi phí hạt xanh',
+        'sc3-title': 'Phòng thí nghiệm cà phê', 'sc3-desc': 'Phân loại chính xác, hỗ trợ nghiên cứu giống và phân loại chất lượng',
+        'video-title': 'Trình diễn kỹ thuật',
+        'video-sub': 'Phân loại tốc độ cao · Nhận diện AI thời gian thực · Xuất lô chuẩn một chạm',
+        'footer': '© 2026 APEX · Giải pháp phân loại cà phê toàn diện  |  Định nghĩa lại chất lượng bằng AI'
+    },
+    th: {
+        'nav-home': 'หน้าหลัก', 'nav-machine': 'รุ่น AI', 'nav-contact': 'ติดต่อ',
+        'quote-btn': 'ขอราคา',
+        'back': 'กลับหน้าหลัก',
+        'machine-title': 'APEX A1 · เครื่องคัดแยกสีอัจฉริยะ',
+        'machine-sub': 'คัดแยกเมล็ดกาแฟครบวงจร · AI Vision + เลนส์ความแม่นยำสูง',
+        'spec-throughput': 'กำลังการผลิต',
+        'spec-precision': 'ความแม่นยำทางแสง',
+        'spec-ejector': 'หัวดีดนิวเมติก',
+        'spec-training': 'ภาพฝึก / โปรไฟล์แบบกำหนดเอง',
+        'spec-table-title': 'ข้อกำหนดทางเทคนิค',
+        'st1': 'รุ่น', 'st2': 'กำลังการผลิต', 'st3': 'ความละเอียดของแสง',
+        'st4': 'จำนวนหัวดีดนิวเมติก', 'st5': 'ภาพฝึก AI',
+        'st6': 'โหมดการคัดแยก', 'st7': 'ขนาด (ก×ย×ส)', 'st8': 'แหล่งจ่ายไฟ',
+        'features-title': 'ข้อได้เปรียบหลัก',
+        'f1': 'เพิ่มคะแนนการชิม · กำจัด Quaker และ pseudo-quaker',
+        'f2': 'จัดหาอัจฉริยะ · คัดแยกเมล็ดเกรดต่ำให้ได้มาตรฐานพิเศษ',
+        'f3': 'ขยายขนาดโดยไม่ประนีประนอม · 500กก./ชม. ก้าวข้ามข้อจำกัดการคัดแยกด้วยมือ',
+        'f4': 'สามในหนึ่ง · คัดแยกสี กำจัดตำหนิ และจัดขนาดในครั้งเดียว',
+        'f5': 'การเรียนรู้ด้วย AI · สร้างโปรไฟล์แบบกำหนดเอง 2-4 วัน ไม่ต้องปรับเทียบ RGB ด้วยมือ',
+        'f6': 'ข้อมูลตรวจสอบย้อนกลับ · รายงานคุณภาพหนึ่งคลิก ตรวจสอบย้อนกลับได้เต็มรูปแบบ',
+        'scenario-title': 'การประยุกต์ใช้',
+        'sc1-title': 'ผู้คั่วพิเศษ', 'sc1-desc': 'ปรับปรุงคะแนนการชิม รักษาเสถียรภาพคุณภาพ',
+        'sc2-title': 'โรงงานแปรรูปขนาดใหญ่', 'sc2-desc': 'การประมวลผลขนาดใหญ่ ลดต้นทุนเมล็ดเขียว',
+        'sc3-title': 'ห้องปฏิบัติการกาแฟ', 'sc3-desc': 'การคัดแยกที่แม่นยำ สนับสนุนการวิจัยพันธุ์และการจัดเกรดคุณภาพ',
+        'video-title': 'การสาธิตทางเทคนิค',
+        'video-sub': 'คัดแยกความเร็วสูง · รู้จำด้วย AI แบบเรียลไทม์ · เอาต์พุตชุดมาตรฐานหนึ่งคลิก',
+        'footer': '© 2026 APEX · โซลูชันคัดแยกเมล็ดกาแฟครบวงจร  |  นิยามใหม่ของคุณภาพด้วย AI'
+    },
+    ar: {
+        'nav-home': 'الرئيسية', 'nav-machine': 'نماذج الذكاء الاصطناعي', 'nav-contact': 'اتصل بنا',
+        'quote-btn': 'طلب عرض سعر',
+        'back': 'العودة إلى الرئيسية',
+        'machine-title': 'APEX A1 · آلة الفرز الذكي بالألوان',
+        'machine-sub': 'فرز حبوب البن الشامل · رؤية الذكاء الاصطناعي + بصريات دقيقة',
+        'spec-throughput': 'الإنتاجية',
+        'spec-precision': 'الدقة البصرية',
+        'spec-ejector': 'قاذف هوائي',
+        'spec-training': 'صور تدريب / ملف تعريف مخصص',
+        'spec-table-title': 'المواصفات الفنية',
+        'st1': 'الموديل', 'st2': 'الإنتاجية', 'st3': 'الدقة البصرية',
+        'st4': 'عدد القاذفات الهوائية', 'st5': 'صور تدريب الذكاء الاصطناعي',
+        'st6': 'أنماط الفرز', 'st7': 'الأبعاد (ع×ف×ا)', 'st8': 'مصدر الطاقة',
+        'features-title': 'المزايا الأساسية',
+        'f1': 'رفع درجات التذوق · إزالة الحبوب المتعفنة وشبه المتعفنة',
+        'f2': 'شراء ذكي · فرز الحبوب منخفضة الدرجة إلى معايير خاصة',
+        'f3': 'توسيع بدون تنازل · 500 كجم/ساعة، كسر عنق زجاجة الفرز اليدوي',
+        'f4': 'ثلاثة في واحد · الفرز بالألوان وإزالة العيوب وتصنيف الحجم بتمريرة واحدة',
+        'f5': 'تعلم الذكاء الاصطناعي · بناء ملف تعريف مخصص خلال 2-4 أيام، بدون معايرة RGB يدوية',
+        'f6': 'بيانات قابلة للتتبع · تقارير الجودة بنقرة واحدة، تتبع كامل',
+        'scenario-title': 'التطبيقات',
+        'sc1-title': 'المحمصات المتخصصة', 'sc1-desc': 'تحسين درجات التذوق، تثبيت جودة الإنتاج',
+        'sc2-title': 'مصانع المعالجة الكبيرة', 'sc2-desc': 'معالجة على نطاق واسع، تقليل تكاليف الحبوب الخام',
+        'sc3-title': 'مختبرات القهوة', 'sc3-desc': 'فرز دقيق، دعم أبحاث الأصناف وتصنيف الجودة',
+        'video-title': 'عرض تقني',
+        'video-sub': 'فرز عالي السرعة · تعرف الذكاء الاصطناعي في الوقت الفعلي · إخراج دفعة قياسية بنقرة واحدة',
+        'footer': '© 2026 APEX · حل شامل لفرز حبوب البن  |  إعادة تعريف الجودة بالذكاء الاصطناعي'
+    },
+    tr: {
+        'nav-home': 'Ana Sayfa', 'nav-machine': 'AI Modelleri', 'nav-contact': 'İletişim',
+        'quote-btn': 'Teklif Al',
+        'back': 'Ana Sayfaya Dön',
+        'machine-title': 'APEX A1 · Akıllı Renk Ayırıcı',
+        'machine-sub': 'Tek Duraklı Kahve Çekirdeği Ayırma · AI Görüş + Hassas Optik',
+        'spec-throughput': 'Kapasite',
+        'spec-precision': 'Optik Hassasiyet',
+        'spec-ejector': 'Pnömatik Ejector',
+        'spec-training': 'Eğitim Görüntüsü / Özel Profil',
+        'spec-table-title': 'Teknik Özellikler',
+        'st1': 'Model', 'st2': 'Kapasite', 'st3': 'Optik Çözünürlük',
+        'st4': 'Pnömatik Ejector Sayısı', 'st5': 'AI Eğitim Görüntüsü',
+        'st6': 'Sınıflandırma Modları', 'st7': 'Boyutlar (U×G×Y)', 'st8': 'Güç Kaynağı',
+        'features-title': 'Temel Avantajlar',
+        'f1': 'Kupa Puanlarını Yükseltin · Quaker ve pseudo-quaker'ları temizleyin',
+        'f2': 'Akıllı Tedarik · Düşük dereceli çekirdekleri özel standartlara sınıflandırın',
+        'f3': 'Tavizsiz Ölçeklenebilirlik · 500kg/s, manuel sınıflandırma darboğazını kırın',
+        'f4': 'Üçü Bir Arada · Renk ayırma, kusur giderme, boyut sınıflandırması tek geçişte',
+        'f5': 'AI Öğrenmesi · 2-4 günde özel sınıflandırma profili, manuel RGB kalibrasyonu yok',
+        'f6': 'Veri Takibi · Tek tıkla kalite raporu, tam izlenebilirlik',
+        'scenario-title': 'Uygulamalar',
+        'sc1-title': 'Özel Kavurucular', 'sc1-desc': 'Kupa puanlarını iyileştirin, kaliteyi dengeleyin',
+        'sc2-title': 'Büyük İşleme Tesisleri', 'sc2-desc': 'Ölçekli işleme, yeşil çekirdek maliyetlerini azaltın',
+        'sc3-title': 'Kahve Laboratuvarları', 'sc3-desc': 'Hassas sınıflandırma, çeşit araştırması ve kalite derecelendirmesini destekleyin',
+        'video-title': 'Teknik Demo',
+        'video-sub': 'Yüksek hızlı sınıflandırma · AI gerçek zamanlı tanıma · Tek tıkla standart parti çıktısı',
+        'footer': '© 2026 APEX · Tek Duraklı Kahve Çekirdeği Renk Ayırma  |  Kaliteyi AI ile Yeniden Tanımlama'
+    },
+    fa: {
+        'nav-home': 'صفحه اصلی', 'nav-machine': 'مدل‌های هوش مصنوعی', 'nav-contact': 'تماس با ما',
+        'quote-btn': 'دریافت قیمت',
+        'back': 'بازگشت به صفحه اصلی',
+        'machine-title': 'APEX A1 · دستگاه جداسازی رنگ هوشمند',
+        'machine-sub': 'جداسازی یک‌جا دانه قهوه · بینایی هوش مصنوعی + اپتیک دقیق',
+        'spec-throughput': 'ظرفیت پردازش',
+        'spec-precision': 'دقت اپتیک',
+        'spec-ejector': 'اجکتور پنوماتیک',
+        'spec-training': 'تصاویر آموزشی / پروفایل سفارشی',
+        'spec-table-title': 'مشخصات فنی',
+        'st1': 'مدل', 'st2': 'ظرفیت', 'st3': 'رزولوشن اپتیک',
+        'st4': 'تعداد اجکتور پنوماتیک', 'st5': 'تصاویر آموزشی هوش مصنوعی',
+        'st6': 'حالت‌های جداسازی', 'st7': 'ابعاد (ط×ع×ا)', 'st8': 'منبع تغذیه',
+        'features-title': 'مزایای کلیدی',
+        'f1': 'افزایش امتیاز فنجان · حذف دانه‌های کوکر و شبه‌کوکر',
+        'f2': 'تدارکات هوشمند · جداسازی دانه‌های درجه پایین به استانداردهای ویژه',
+        'f3': 'مقیاس‌پذیری بدون مصالحه · ۵۰۰ کیلوگرم در ساعت، شکست تنگنای جداسازی دستی',
+        'f4': 'سه در یک · جداسازی رنگ، حذف عیوب، درجه‌بندی اندازه در یک مرحله',
+        'f5': 'یادگیری هوش مصنوعی · ساخت پروفایل سفارشی ۲-۴ روزه، بدون کالیبراسیون دستی RGB',
+        'f6': 'داده‌های قابل ردیابی · گزارش کیفیت یک‌کلیک، ردیابی کامل',
+        'scenario-title': 'کاربردها',
+        'sc1-title': 'بوکان‌های تخصصی', 'sc1-desc': 'بهبود امتیازات تست فنجان، تثبیت کیفیت',
+        'sc2-title': 'کارخانه‌های فرآوری بزرگ', 'sc2-desc': 'پردازش در مقیاس، کاهش هزینه‌های دانه سبز',
+        'sc3-title': 'آزمایشگاه‌های قهوه', 'sc3-desc': 'جداسازی دقیق، پشتیبانی از تحقیقات ارقام و درجه‌بندی کیفیت',
+        'video-title': 'نمایش فنی',
+        'video-sub': 'جداسازی سرعت بالا · تشخیص هوش مصنوعی بلادرنگ · خروجی دسته استاندارد یک‌کلیک',
+        'footer': '© 2026 APEX · راه‌حل یک‌جا جداسازی رنگ دانه قهوه  |  بازتعریف کیفیت با هوش مصنوعی'
+    }
+};
+
+// ============================================================
+// 语言切换逻辑
+// ============================================================
+let currentLang = localStorage.getItem('apex-lang') || 'zh';
+
+function applyLanguage(lang) {
+    if (!translations[lang]) { lang = 'en'; }
+    currentLang = lang;
+    localStorage.setItem('apex-lang', lang);
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key] !== undefined) {
+            el.innerHTML = translations[lang][key];
+        }
+    });
+
+    const labelMap = {
+        zh: '中文', en: 'English', id: 'Indonesia', vi: 'Tiếng Việt',
+        th: 'ไทย', ar: 'العربية', tr: 'Türkçe', fa: 'فارسی'
+    };
+    const labelEl = document.getElementById('currentLangLabel');
+    if (labelEl) labelEl.textContent = labelMap[lang] || '语言';
+}
+
+document.querySelectorAll('#langDropdown a[data-lang]').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const lang = this.getAttribute('data-lang');
+        applyLanguage(lang);
+        document.getElementById('langDropdown').style.display = 'none';
+    });
+});
+
+document.getElementById('langBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('langDropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+});
+document.addEventListener('click', function() {
+    document.getElementById('langDropdown').style.display = 'none';
+});
+
+document.getElementById('hamburgerBtn').addEventListener('click', function() {
+    document.getElementById('mainNav').classList.toggle('open');
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    applyLanguage(currentLang);
+});
+</script>
+</body>
+</html>
